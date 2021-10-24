@@ -1,0 +1,266 @@
+<!-- 
+    Primitiva Raster - Linha - Algoritmo do Ponto Médio  
+    Jorge Matias 1901087   22/10/2021
+-->
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>RASTER-Linha</title>
+    <link rel="stylesheet" href="./style/style.css">
+    <script src="./js/script.js"></script>
+</head>
+
+
+<div class="title">
+    <div style="height: 50px">
+        <h1>Primitivas Raster</h1>
+    </div>
+    <div id="selection" class="dataInput" style="height: 50px">
+        <p>Seleccione o Algoritmo:</p>
+        <form class="dataInput" style="align-items: baseline; height: auto; " action="/action_page.php">
+            <input type="radio" id="DDA" name="selectAlg" value="DDA (digital differential analyzer)"
+                onclick="selectDDA()">
+            <label for="DDA">
+                <p>DDA (digital differential analyzer)</p>
+            </label><br>
+              <input type="radio" id="PML" name="selectAlg" value="Ponto Medio - Linhas" onclick="selectPML()">
+              <label for="PML">
+                <p>Ponto Medio - Linhas</p>
+            </label>
+            <input type="radio" id="PMC" name="selectAlg" value="Ponto Medio - Circunferências" onclick="selectPMC()">
+              <label for="PMC">
+                <p>Ponto Medio - Circunferências</p>
+            </label>
+        </form>
+    </div>
+
+    <div id="algtitle" style="height: 50px">
+    </div>
+    <div id="dataDiv" class="dataInput" style="display: none;">
+        <div class="dataInput" id="line" style="display: none;">
+            <div class="dataInput" id=lineStart>
+                <p>Coordenadas:</p>
+                <p style="padding-left: 30">Ponto A (xa</p>
+                <input id="xa" type="number" value="0" readonly="readonly">
+                <p>,ya</p>
+                <input id="ya" type="number" value="0" readonly="readonly">
+                <p>)</p>
+                <p style="padding-left: 30">
+                <p>Ponto B (xb</p>
+                <input id="xb" type="number" value="0">
+                <p>,yb</p>
+                <input id="yb" type="number" value="0">
+                <p>)</p>
+                </p>
+                <input type="button" onclick="callSelection()" value="Desenhar">
+            </div>
+            <div class="dataInput" id="drawLine" style="display: none;">
+                <p id='infoLine'></p>
+                <input type="button" onclick="callStart()" value="Voltar">
+            </div>
+        </div>
+
+        <div class="dataInput" id="circun" style="display: none;">
+            <div class="dataInput" id="circunStart">
+                <p>Coordenadas:</p>
+                <p style="padding-left: 30">Centro (xa</p>
+                <input id="xa" type="number" value="0" readonly="readonly">
+                <p>,ya</p>
+                <input id="ya" type="number" value="0" readonly="readonly">
+                <p>)</p>
+                <p style="padding-left: 30">
+                <p>Raio (</p>
+                <input id="raio" type="number" value="0">
+                <p>)</p>
+                </p>
+                <input type="button" onclick="callSelection()" value="Desenhar">
+            </div>
+            <div class="dataInput" id="drawCircun" style="display: none;">
+                <p id='infoCircun'></p>
+                <input type="button" onclick="callStart()" value="Voltar">
+            </div>
+        </div>
+    </div>
+</div>
+
+<body>
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.124.0/build/three.module.js';
+        import { OrbitControls } from 'https://unpkg.com/three@0.124.0/examples/jsm/controls/OrbitControls.js'
+
+        let mesh, renderer, scene, camera, controls;
+        init();
+        animate();
+
+        function init() {
+            document.getElementById('xa').value = '0';
+            document.getElementById('ya').value = '0';
+
+            // renderer 
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
+
+            // scene 
+            scene = new THREE.Scene();
+
+            // camera
+            camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 10000);
+            camera.position.set(0, 0, 30);
+
+            // controls 
+            controls = new OrbitControls(camera, renderer.domElement);
+
+            // ambient 
+            scene.add(new THREE.AmbientLight(0x222222));
+
+            // light 
+            var light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(20, 20, 0);
+            scene.add(light);
+
+            // axes 
+            //scene.add( new THREE.AxesHelper( 20 ) ); 
+
+        }
+
+        // Algoritmo DDA (digital differential analyzer)
+
+        window.DDA = (x0, y0, x1, y1) => {
+            var x = x0;
+            var dx = x1 - x0;
+            var dy = y1 - y0;
+            var yr;
+            var countVertives = 0;
+            var passos = Math.abs(dx) > Math.abs(dy) ? Math.abs(dx) : Math.abs(dy);
+            var Xinc = 1;
+            var Yinc = dy / parseFloat(passos)
+            var m = dy / dx;
+            let y = y0;
+            const vertices = [];
+
+            for (var i = 0; i <= passos; i++) {
+                yr = Math.round(y);
+                console.log(x + ',' + yr + ',0  y=' + y);
+                vertices.push(x, yr, 0);
+                countVertives++;
+                x++;
+                y = parseFloat(y) + parseFloat(Yinc);
+            }
+            drawVertices(vertices, 1, x0, y0, x1, y1, 0);
+        }
+
+        // Algoritmo do ponto médio para geração de linhas
+        window.PML = (x0, y0, x1, y1) => {
+
+            var dx = x1 - x0;
+            var dy = y1 - y0;
+            var d = 2 * dy - dx;
+            var incrE = 2 * dy;
+            var incrNE = 2 * (dy - dx);
+            var x = x0;
+            var y = y0;
+
+            const vertices = [];
+
+            vertices.push(x, y, 0); //start pixel
+            while (x < x1) {
+                if (d <= 0) {      // Choose E
+                    d += incrE;
+                    x++;
+                } else {        // Choose NE
+                    d += incrNE;
+                    x++;
+                    y++;
+                }
+                vertices.push(x, y, 0);
+            }
+            drawVertices(vertices, 1, x0, y0, x1, y1, raio);
+        }
+
+        // Algoritmo do ponto médio para geração de circunferências
+
+        window.PMC = (x0, y0, raio) => {
+            var x=0;
+            var y=raio;
+            var p=(5/4)-raio;
+
+            const vertices =[];
+
+            vertices.push(x0,y0+raio,0);
+            vertices.push(x0,y0-raio,0);
+            vertices.push(x0-raio,y0,0);
+            vertices.push(x0+raio,y0,0);
+            
+            while (y>x){
+                if (p<=0){
+                    p+=(2*x)+3;
+                    
+                }else{
+                    p+=2*(x-y)+5;
+                    y--;
+                }
+                x++;
+                vertices.push(x0+x,y0+y,0);
+                vertices.push(x0-x,y0+y,0);
+                vertices.push(x0+x,y0-y,0);
+                vertices.push(x0-x,y0-y,0);
+
+                vertices.push(y0+y,x0+x,0);
+                vertices.push(y0+y,x0-x,0);
+                vertices.push(y0-y,x0+x,0);
+                vertices.push(y0-y,x0-x,0);              
+            }
+            drawVertices(vertices, 0, x0, y0, 0, 0, raio);
+        }
+
+        //Função que desenha os pontos
+
+        function drawVertices(vertices, line, x0, y0, x1, y1, raio) {
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+            const material = new THREE.PointsMaterial({ color: 0x888888, size: 1 });
+
+            const points = new THREE.Points(geometry, material);
+
+            scene.add(points);
+
+            if (line) {
+                const lineFromPoints = [];
+                lineFromPoints.push(new THREE.Vector3(x0, y0, 0));
+                lineFromPoints.push(new THREE.Vector3(x1, y1, 0));
+                const testLine = new THREE.BufferGeometry().setFromPoints(lineFromPoints);
+                const blue = new THREE.LineBasicMaterial({ color: 0x2f24f4 });
+                const lineColored = new THREE.Line(testLine, blue);
+                scene.add(lineColored);
+            } else {
+                const geometry = new THREE.RingGeometry( raio-0.1,raio , 32,1,0,6.3 );
+                const material = new THREE.MeshBasicMaterial( { color: 0x2f24f4, side: THREE.DoubleSide } );
+                const circle = new THREE.Mesh(geometry, material);
+                scene.add(circle);
+            }
+        }
+
+
+        window.clearScene = () => {
+            scene.remove.apply(scene, scene.children);
+        }
+
+
+
+        function animate() {
+            requestAnimationFrame(animate);
+            //controls.update(); 
+            renderer.render(scene, camera);
+        }
+
+    </script>
+
+</body>
+
+</html>
