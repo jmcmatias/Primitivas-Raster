@@ -218,81 +218,35 @@
         }
 
 
-        //Função que desenha um cubo
+        
 
 
         //Função que desenha nos coordenadas (array vertices, line=1 (para linhas) ,=0 para circunferencia)
 
         function drawVertices(vertices, line, x0, y0, x1, y1, raio) {
 
-
             //cube.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-
             //const material = new THREE.PointsMaterial({ color: 0x888888, size: 1 });
-
             //const points = new THREE.Points(cube, material);
+
             const vert = vertices.map((i) => Number(i));
-
             const geometry = new THREE.BoxGeometry(1, 1, 1);
-
             const loader = new THREE.TextureLoader();
-
             const material = new THREE.MeshBasicMaterial({
                 map: loader.load("./textures/pixel.png"),
             });
 
 
-            /*
-                        const loader = new THREE.CubeTextureLoader();
-                        loader.setPath('./textures/');
-            
-                        const textureCube = loader.load([
-                            'pixel.png', 'pixel.png',
-                            'pixel.png', 'pixel.png',
-                            'pixel.png', 'pixel.png'
-                        ]);
-                        
-                        textureCube.repeat.set(0.5, 0.5);
-            */
-            //const material = new THREE.MeshBasicMaterial({ color: 0xffffff, envMap: textureCube });
-
-            //const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-
-
-
-
-            // 
-            // console.table(coord);
-
             console.log(vert.length);
             for (let i = 0; i < (vert.length * 3); i = i + 3) {
-
-
-
                 const cube = new THREE.Mesh(geometry, material);
-
-                console.table('x=' + vert[i] + ' y=' + vert[i + 1] + ' z=' + vert[i + 2]);
+                console.log('x=' + vert[i] + ' y=' + vert[i + 1] + ' z=' + vert[i + 2]);
                 console.log('---------------------------------------');
                 cube.position.x = vert[i];
                 cube.position.y = vert[i + 1];
 
                 scene.add(cube);
             }
-
-
-
-            // var cubes = THREE.MeshBasicMaterial(geometry, material);
-            //scene.add(cubes);
-
-            //  const geometry = new THREE.BufferGeometry();
-            //  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-
-            //const material = new THREE.PointsMaterial({ color: 0x888888, size: 1 });
-
-            // const points = new THREE.Points(geometry, material);
-
-            //  scene.add(points);
-
 
             if (line) {
                 const lineFromPoints = [];
@@ -311,12 +265,9 @@
 
         }
 
-
         window.clearScene = () => {
             scene.remove.apply(scene, scene.children);
         }
-
-
 
         function animate() {
             requestAnimationFrame(animate);
