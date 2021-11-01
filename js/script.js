@@ -10,8 +10,6 @@ function callStart() {
     clearScene();
 }
 
-
-
 function callSelection() {
     clearScene();
     if (document.getElementById("PMC").checked) {

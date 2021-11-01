@@ -94,6 +94,8 @@
         init();
         animate();
 
+        
+
         function init() {
             document.getElementById('xa').value = '0';
             document.getElementById('ya').value = '0';
@@ -217,14 +219,41 @@
             drawVertices(vertices, 0, x0, y0, 0, 0, raio);
         }
 
+        function drawGrid(centerX,centerY,pixelSize,gridSize){
+            
+            const material = new THREE.LineBasicMaterial({color: 0x00ff00});
+            const vertLinePoints = [];
+            vertLinePoints.push ( new THREE.Vector3( 0, -(pixelSize/2), 0 ));
+            vertLinePoints.push ( new THREE.Vector3( 0, gridSize-(pixelSize/2), 0 ));
+            const horizLinePoints = [];
+            horizLinePoints.push ( new THREE.Vector3( -(pixelSize/2), 0, 0 ));
+            horizLinePoints.push ( new THREE.Vector3( gridSize-(pixelSize/2), 0, 0 ));
 
-        
+            const vertLineGeometry = new THREE.BufferGeometry().setFromPoints(vertLinePoints);
+            const horizLineGeometry = new THREE.BufferGeometry().setFromPoints(horizLinePoints);
+
+
+            for (let x=-pixelSize/2, y=centerY-(gridSize/2);x<=gridSize;x=x+pixelSize){
+                const vertLine = new THREE.Line( vertLineGeometry, material );
+                vertLine.position.x=(x-(gridSize/2))*pixelSize;
+                vertLine.position.y=y;
+                vertLine.position.z=0.5001;
+                scene.add(vertLine);
+            }
+            for (let y=0, x=centerX-(gridSize/2);y<=gridSize;y++){
+                const horizLine = new THREE.Line( horizLineGeometry, material );
+                horizLine.position.x=x;
+                horizLine.position.y=((y-(pixelSize/2))-(gridSize/2))*pixelSize;
+                horizLine.position.z=0.5001;
+                scene.add(horizLine);     
+            }
+
+        }
 
 
         //Função que desenha nos coordenadas (array vertices, line=1 (para linhas) ,=0 para circunferencia)
-
         function drawVertices(vertices, line, x0, y0, x1, y1, raio) {
-
+            drawGrid(0,0,1,40);
             //cube.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
             //const material = new THREE.PointsMaterial({ color: 0x888888, size: 1 });
             //const points = new THREE.Points(cube, material);
@@ -240,26 +269,37 @@
             console.log(vert.length);
             for (let i = 0; i < (vert.length * 3); i = i + 3) {
                 const cube = new THREE.Mesh(geometry, material);
-                console.log('x=' + vert[i] + ' y=' + vert[i + 1] + ' z=' + vert[i + 2]);
-                console.log('---------------------------------------');
+                //console.log('x=' + vert[i] + ' y=' + vert[i + 1] + ' z=' + vert[i + 2]);
+                //console.log('---------------------------------------');
                 cube.position.x = vert[i];
                 cube.position.y = vert[i + 1];
-
                 scene.add(cube);
             }
 
+            var lineWidth = 10;
             if (line) {
                 const lineFromPoints = [];
-                lineFromPoints.push(new THREE.Vector3(x0, y0, 0));
-                lineFromPoints.push(new THREE.Vector3(x1, y1, 0));
+                lineFromPoints.push(new THREE.Vector3(x0, y0-((lineWidth/2)*0.005), 0));
+                lineFromPoints.push(new THREE.Vector3(x1, y1-((lineWidth/2)*0.005), 0));
                 const testLine = new THREE.BufferGeometry().setFromPoints(lineFromPoints);
                 const blue = new THREE.LineBasicMaterial({ color: 0x2f24f4 });
-                const lineColored = new THREE.Line(testLine, blue);
-                scene.add(lineColored);
+                
+                while (lineWidth){
+                    const lineColored = new THREE.Line(testLine, blue);
+                    lineColored.position.z=0.5001;
+                    lineColored.position.y=0.005*lineWidth;
+                    scene.add(lineColored);
+                    lineWidth--;
+                }
+               
+                
+
+
             } else {
                 const geometry = new THREE.RingGeometry(raio - 0.1, raio, 32, 1, 0, 6.3);
                 const material = new THREE.MeshBasicMaterial({ color: 0x2f24f4, side: THREE.DoubleSide });
                 const circle = new THREE.Mesh(geometry, material);
+                circle.position.z=0.5001;
                 scene.add(circle);
             }
 
